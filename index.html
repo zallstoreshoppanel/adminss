@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel Web Bug WA</title>
+<style>
+body{margin:0; padding:0; font-family:Arial, sans-serif; background:#121212; color:#fff; display:flex; flex-direction:column; align-items:center; min-height:100vh;}
+h1,h2{margin:10px 0;}
+input,select,button{margin:5px 0; padding:10px; border-radius:5px; border:none;}
+button{background:#00bfff; color:#fff; cursor:pointer; transition:0.3s;}
+button:hover{opacity:0.8;}
+table{border-collapse:collapse; margin-top:20px; width:90%;}
+table,th,td{border:1px solid #fff;}
+th,td{padding:10px; text-align:center;}
+</style>
+</head>
+<body>
+
+<h1>Admin Panel</h1>
+<div id="loginAdmin">
+  <input type="password" id="adminPass" placeholder="Masukkan password admin">
+  <button onclick="loginAdmin()">Login</button>
+  <p id="loginMsg" style="color:#ff4d4d;"></p>
+</div>
+
+<div id="adminPanel" style="display:none;">
+  <h2>Tambah Akun</h2>
+  <input type="text" id="newUser" placeholder="Username">
+  <input type="password" id="newPass" placeholder="Password">
+  <select id="newExpired">
+    <option value="permanent">Permanent</option>
+    <option value="1d">1 Hari</option>
+    <option value="7d">7 Hari</option>
+    <option value="30d">30 Hari</option>
+  </select>
+  <button onclick="addUser()">Tambah Akun</button>
+
+  <h2>Daftar Akun</h2>
+  <table id="userTable">
+    <tr><th>Username</th><th>Password</th><th>Expired</th><th>Aksi</th></tr>
+  </table>
+</div>
+
+<script>
+// Password admin default
+const ADMIN_PASSWORD = "admin123";
+
+// ===== Login Admin =====
+function loginAdmin(){
+    const pass = document.getElementById('adminPass').value;
+    const msg = document.getElementById('loginMsg');
+    if(pass === ADMIN_PASSWORD){
+        document.getElementById('loginAdmin').style.display='none';
+        document.getElementById('adminPanel').style.display='block';
+        loadUsers();
+    } else { msg.textContent="Password salah!"; }
+}
+
+// ===== Users via LocalStorage =====
+if(!localStorage.getItem('users')){
+    localStorage.setItem('users', JSON.stringify([]));
+}
+
+// ===== Load Users =====
+function loadUsers(){
+    const users = JSON.parse(localStorage.getItem('users'));
+    const table = document.getElementById('userTable');
+    table.innerHTML = '<tr><th>Username</th><th>Password</th><th>Expired</th><th>Aksi</th></tr>';
+    users.forEach((u,i)=>{
+        let expText = u.expired==='permanent'? 'Permanent' : new Date(u.expired).toLocaleString();
+        table.innerHTML += `<tr>
+            <td>${u.username}</td>
+            <td>${u.password}</td>
+            <td>${expText}</td>
+            <td><button onclick="deleteUser(${i})">Hapus</button></td>
+        </tr>`;
+    });
+}
+
+// ===== Add User =====
+function addUser(){
+    const u = document.getElementById('newUser').value.trim();
+    const p = document.getElementById('newPass').value.trim();
+    const expSelect = document.getElementById('newExpired').value;
+    if(!u || !p) return alert("Username & password wajib diisi");
+
+    let expiredTime = 'permanent';
+    const now = Date.now();
+    if(expSelect==='1d') expiredTime = now + 1*24*60*60*1000;
+    if(expSelect==='7d') expiredTime = now + 7*24*60*60*1000;
+    if(expSelect==='30d') expiredTime = now + 30*24*60*60*1000;
+
+    const users = JSON.parse(localStorage.getItem('users'));
+    users.push({username:u, password:p, expired:expiredTime});
+    localStorage.setItem('users', JSON.stringify(users));
+    loadUsers();
+}
+
+// ===== Delete User =====
+function deleteUser(index){
+    const users = JSON.parse(localStorage.getItem('users'));
+    users.splice(index,1);
+    localStorage.setItem('users', JSON.stringify(users));
+    loadUsers();
+}
+</script>
+</body>
+</html>
